@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Voting</title>
+  <style>
+    *{
+        scrollbar-width: none;
+        -webkit-user-drag: none;
+        user-select: none;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: #eef2f7;
+      color: #333;
+    }
+    header {
+      background-color: #002147;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    header img {
+      width: 60px;
+      height: auto;
+      margin-right: 20px;
+    }
+    header h1 {
+      font-size: 24px;
+      margin: 0;
+    }
+    .container {
+      padding: 20px 40px;
+    }
+    .user-info {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .user-info img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 2px solid #ccc;
+    }
+    .card-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+    }
+    .card {
+      background: #fff;
+      width: 450px;
+      display: grid;
+      place-items: center;
+      padding: 10px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+      border: 2px solid #ccc;
+    }
+    
+    .card img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+    .card .info {
+      flex: 1;
+      margin: 0 10px;
+    }
+    .card .info h3 {
+      margin: 0;
+      font-size: 20px;
+    }
+    .card .info p {
+      margin: 5px 0;
+      font-size: 14px;
+      color: gray;
+    }
+    .card button {
+      padding: 5px 10px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      display: none;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      width: 300px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .modal-content img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+    }
+    .modal-content button {
+      margin: 10px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .confirm-btn { background-color: #28a745; color: white; }
+    .reject-btn { background-color: #dc3545; color: white; }
+    #congrats {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .pun{
+      width: 310PX;
+    }
+    #nota-feedback {
+      background: #fff3cd;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    #nota-feedback textarea {
+      width: 100%;
+      height: 100px;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      resize: vertical;
+    }
+    #nota-feedback button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="timeoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:#fff; padding:30px; border-radius:12px; text-align:center; max-width:400px;">
+    <h2>You are timed out</h2>
+    <p>Refresh the page to VOTE</p>
+    <button onclick="location.reload()" style="padding:10px 20px; background:#28a745; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">REFRESH</button>
+  </div>
+</div>
+
+  <header>
+    <img style="height: 35px; width: 35px;" src="images/ECI.png" alt="ELECTION COMMISSION OF INDIA">
+    <h1 style="font-size: 30px;">ELECTION COMMISSION OF INDIA | E VOTING</h1>
+    <div id="timer" style="margin-left: auto; font-weight: bold; color: white; background-color: #dc3545; padding: 6px 12px; border-radius: 8px;">
+  Time left: <span id="time">60</span>s
+</div>
+
+  </header>
+  <div class="container">
+    <div class="user-info">
+      <img style="width: auto; height: 250px;" src="images/RoddurRoy.jpg" alt="User Photo" />
+      <div>
+        <div style="display: flex;"><p class="pun"><strong>EPIC:</strong> VSF5423652</p><p class="pun"><strong>NAME:</strong> RODDUR ROY</p><p class="pun"><strong>RELATIVE:</strong> RAJU DA</p></div>
+        <div style="display: flex;"><p class="pun"><strong>DOB:</strong> 09 / 12 / 2005</p><p class="pun"><strong>AGE:</strong> 20</p><p class="pun"><strong>GENDER:</strong> MALE</p></div>
+        <div style="display: flex;"><p class="pun"><strong>STATE: </strong>WEST BENGAL</p><p class="pun"><strong>DISTRICT: </strong>NORTH 24 PARGANAS</p><p class="pun"><strong>PARLIAMENT:</strong> DUM DUM</p><p><strong>ASSEMBLY: </strong>RAJARHAT GOPALPUR</p></div>
+        <div style="display: flex;"><p class="pun"><strong>POLLING STATION: </strong>NABANNA, ROOM-420</p><p class="pun"><strong>PART NAME: </strong>NABANNA</p><p class="pun"><strong>SERIAL NUMBER: </strong>69</p></div>
+      </div>
+    </div>
+
+    <div id="congrats">Your Candidate list</div>
+    <div class="card-container" id="candidate-list"></div>
+    <div id="nota-feedback" style="display:none;">
+      <h3>Why did you choose NOTA?</h3>
+      <textarea placeholder="What are the developments needed in your area?"></textarea>
+      <br><button>Submit Feedback</button>
+    </div>
+  </div>
+
+  <div class="modal" id="vote-modal">
+    <div class="modal-content">
+      <div id="modal-body"></div>
+      <button class="confirm-btn" onclick="confirmVote()">Confirm Vote</button>
+      <button class="reject-btn" onclick="closeModal()">Back</button>
+    </div>
+  </div>
+
+  <script>
+    const candidates = [
+      {
+        name: "Mumtaz Begum",
+        party: "All India Trinamool Congress",
+        photo: "images/mmta.jpg",
+        symbol: "images/AITC.svg"
+      },
+      {
+        name: "Oggy Adityanath",
+        party: "Bhatariya Janta Party",
+        photo: "images/oggy.jpeg",
+        symbol: "images/bjp.png"
+      },
+      {
+        name: "Gopal Bhar",
+        party: "Communist Party of India (Marxist)",
+        photo: "images/gopal.jpg",
+        symbol: "images/CPIM.svg"
+      },
+      {
+        name: "Pappu Gandhi",
+        party: "Indian National Congress",
+        photo: "images/ppu.webp",
+        symbol: "images/INC.png"
+      },
+      {
+        name: "Obama Bin Laden",
+        party: "Indian Secular Front",
+        photo: "images/osma.jpg",
+        symbol: "images/env.jpg"
+      },
+      {
+        name: "Tom Miyan",
+        party: "All India Majlis-e-Ittehadul Muslimeen",
+        photo: "images/tom.jpeg",
+        symbol: "images/AIMIM.png"
+      },
+      {
+        name: "Bhadwa Kejriwal",
+        party: "Aam Aadmi Party",
+        photo: "images/kjru.jpg",
+        symbol: "images/AAP.svg"
+      },
+      {
+        name: "Kalia Das Mayawati",
+        party: "Bahujan Samaj Party",
+        photo: "images/klia.jpg",
+        symbol: "images/BSP.png"
+      },
+      {
+        name: "NOTA",
+        party: "None of The Above",
+        photo: "images/pgl.jpg",
+        symbol: "images/NOTA.png"
+      }
+    ];
+
+    let voted = false;
+    let votedCandidate = null;
+
+    function renderCandidates() {
+      const container = document.getElementById("candidate-list");
+      container.innerHTML = "";
+
+      let sorted = candidates.slice(0, -1).sort((a, b) => a.name.localeCompare(b.name));
+      sorted.push(candidates[candidates.length - 1]);
+
+      if (voted && votedCandidate) {
+        if (votedCandidate.name !== "NOTA") {
+          createCard(votedCandidate, true);
+        }
+        return;
+      }
+
+      sorted.forEach(c => createCard(c));
+    }
+
+    function createCard(candidate, isConfirmed = false) {
+      const container = document.getElementById("candidate-list");
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <img style="object-fit: cover;" src="${candidate.photo}" alt="Candidate" />
+        <div class="info">
+          <h3>${candidate.name}</h3>
+          <p>${candidate.party}</p>
+          ${!isConfirmed && !voted ? `<button style="width: 100%; height: 30px; font-size: 100%;" onclick='openModal(${JSON.stringify(candidate)})'>VOTE</button>` : ""}
+        </div>
+        <img src="${candidate.symbol}" alt="Party Symbol" />
+      `;
+      container.appendChild(card);
+    }
+
+    function openModal(candidate) {
+      votedCandidate = candidate;
+      const body = document.getElementById("modal-body");
+      body.innerHTML = `
+        <img src="${candidate.photo}" /><h3>${candidate.name}</h3>
+        <p>${candidate.party}</p>
+        <img src="${candidate.symbol}" />
+        <p>Are you sure you want to vote for this candidate?</p>
+      `;
+      document.getElementById("vote-modal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("vote-modal").style.display = "none";
+    }
+
+    function confirmVote() {
+  voted = true;
+  timerStopped = true;
+  clearInterval(countdown);
+  closeModal();
+  document.getElementById("congrats").innerHTML = `
+    <h3>Congratulations! You have successfully voted for <strong>${votedCandidate.name}</strong>.</h3>
+  `;
+  if (votedCandidate.name === "NOTA") {
+    document.getElementById("nota-feedback").style.display = "block";
+    document.getElementById("candidate-list").style.display = "none";
+  } else {
+    renderCandidates();
+  }
+}
+
+
+    renderCandidates();
+
+let timeLeft = 60;
+let countdown;
+let timerStopped = false;
+
+function startTimer() {
+  const timerDisplay = document.getElementById("time");
+  countdown = setInterval(() => {
+    if (timerStopped) {
+      clearInterval(countdown);
+      return;
+    }
+    timeLeft--;
+    timerDisplay.textContent = timeLeft;
+
+    if (timeLeft <= 0) {
+      clearInterval(countdown);
+      if (!voted) {
+        document.getElementById("timeoutModal").style.display = "flex";
+        disableVoting();
+      }
+    }
+  }, 1000);
+}
+
+function disableVoting() {
+  const voteButtons = document.querySelectorAll("button");
+  voteButtons.forEach(btn => {
+    if (btn.innerText === 'Vote') {
+      btn.disabled = true;
+      btn.style.opacity = 0.5;
+      btn.style.cursor = "not-allowed";
+    }
+  });
+}
+
+// Call this once when page loads
+startTimer();
+
+
+  </script>
+</body>
+</html>
